@@ -14,6 +14,7 @@ requires = [
     'pyramid_debugtoolbar',
     'zope.sqlalchemy',
     'waitress',
+    'dropbox',
     ]
 
 setup(name='cloudyshelf',
@@ -26,8 +27,8 @@ setup(name='cloudyshelf',
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
         ],
-      author='',
-      author_email='',
+      author='Gavin Carothers',
+      author_email='gavin@carothers.name',
       url='',
       keywords='web wsgi bfg pylons pyramid',
       packages=find_packages(),

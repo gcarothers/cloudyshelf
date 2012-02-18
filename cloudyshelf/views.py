@@ -2,10 +2,12 @@ from pyramid.view import view_config
 
 from .models import (
     DBSession,
-    MyModel,
+    User,
     )
+
+from . import BoxSession
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
 def my_view(request):
-    one = DBSession.query(MyModel).filter(MyModel.name=='one').first()
-    return {'one':one, 'project':'cloudyshelf'}
+    single_user = DBSession.query(User).get(1)
+    return {'single_user':single_user, 'project':'cloudyshelf'}
