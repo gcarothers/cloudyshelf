@@ -41,19 +41,19 @@ def post_signup(request):
 	return HTTPFound(request.route_url('shelf'))
 
 @view_config(route_name='allow_dropbox', renderer='allow_dropbox.mako', request_method='GET')
-def signup_dropbox(requset):
+def allow_dropbox(requset):
 	return {}
 
 @view_config(route_name='allow_dropbox', request_method='POST')
-def post_signup_dropbox(request):
+def post_allow_dropbox(request):
 	request_token = request.dropbox_session.obtain_request_token()
 	request.session['request_token'] = request_token.to_string()
 	authorize_url = request.dropbox_session.build_authorize_url(
-		request_token, oauth_callback=request.route_url('callback', qualified=True))
+		request_token, oauth_callback=request.route_url('oauth_callback', qualified=True))
 	return HTTPFound(authorize_url)
 
-@view_config(route_name='callback', request_method='GET', permission='logged in')
-def callback(request):
+@view_config(route_name='oauth_callback', request_method='GET', permission='logged in')
+def oauth_callback(request):
 	user = request.user
 	request_token = oauth.OAuthToken.from_string(request.session['request_token'])
 	del request.session['request_token']
