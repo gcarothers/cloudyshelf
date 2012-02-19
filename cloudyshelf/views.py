@@ -1,6 +1,6 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
-import oauth
+from oauth import oauth
 
 from .models import (
     DBSession,
@@ -26,7 +26,7 @@ def post_signup(request):
 	request_token = BoxSession.obtain_request_token()
 	session['request_token'] = request_token.to_string()
 	authorize_url = BoxSession.build_authorize_url(
-		request_token, oauth_callback=request.url('callback', qualified=True))
+		request_token, oauth_callback=request.route_url('callback', qualified=True))
 	return HTTPFound(authorize_url)
 
 @view_config(route_name='callback', request_method='GET')
@@ -36,15 +36,17 @@ def callback(request):
 	access_token = BoxSession.obtain_access_token(request_token)
 	user = User()
 	user.user_name = session['email']
+	user.email = session['email']
 	user.set_password(session['password'])
 	user.dropbox_token = access_token.to_string()
+	user.status = 0
 	DBSession.add(user)
 	DBSession.flush()
 	del session['email']
 	del session['password']
 	del session['request_token']
 	session['user_id'] = user.id
-	return HTTPFound(request.url('shelf'))
+	return HTTPFound(request.route_url('shelf'))
 
 @view_config(route_name='login', renderer='templates/login.pt', request_method='GET')
 def login(request):
