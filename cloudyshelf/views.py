@@ -1,5 +1,10 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
+from pyramid.security import (
+	authenticated_userid,
+	forget,
+	remember,
+)
 from oauth import oauth
 from dropbox.client import DropboxClient
 
@@ -52,36 +57,39 @@ def callback(request):
 
 @view_config(route_name='login', renderer='login.mako', request_method='GET')
 def login(request):
-	session = request.session
-	session['user_id'] = 1
-	if 'user_id' in session:
+	if authenticated_userid(request):
 		return HTTPFound(request.route_url('shelf'))
 	return {}
 
 @view_config(route_name='login', request_method='POST')
 def post_login(request):
-	session = request.session
-	user = User.by_user_name(user_name = request.params['email'])
-	if user.check_password(request.params['password']):
-		session['user_id'] = user.id
-		return HTTPFound(request.route_url('shelf'))
-	else:
+	user = User.by_user_name(user_name=request.params['email'])
+	if not user.check_password(request.params['password']):
 		return HTTPFound(request.route_url('login'))
+	request.response.headerlist.extend(
+		remember(request, user.id),
+	)
+	return HTTPFound(request.route_url('shelf'))
 
-@view_config(route_name='shelf', renderer='shelf.mako')
+@view_config(route_name='logout', permission='logged in')
+def logout(request):
+	request.response.headerlist.extend(
+		forget(request),
+	)
+	return HTTPFound(request.route_url('login'))
+
+@view_config(route_name='shelf', renderer='shelf.mako', permission='dropbox')
 def shelf(request):
-	session = request.session
-	user = DBSession.query(User).get(session['user_id'])
+	user = request.user
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
 	request.dropbox_session.set_token(access_token.key, access_token.secret)
 	client = DropboxClient(request.dropbox_session)
 	metadata = client.metadata('/')
 	return {'user': user, 'files': metadata['contents']}
 
-@view_config(route_name='shelf_download')
+@view_config(route_name='shelf_download', permission='dropbox')
 def shelf_download(request):
-	session = request.session
-	user = DBSession.query(User).get(session['user_id'])
+	user = request.user
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
 	request.dropbox_session.set_token(access_token.key, access_token.secret)
 	client = DropboxClient(request.dropbox_session)
