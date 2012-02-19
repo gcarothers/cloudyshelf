@@ -66,3 +66,13 @@ def shelf(request):
 	client = DropboxClient(BoxSession)
 	metadata = client.metadata('/')
 	return {'user': user, 'files': metadata['contents']}
+
+@view_config(route_name='shelf_download')
+def shelf_download(request):
+	session = request.session
+	user = DBSession.query(User).get(session['user_id'])
+	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
+	BoxSession.set_token(access_token.key, access_token.secret)
+	client = DropboxClient(BoxSession)
+	media = client.media('/' + request.matchdict['book'])
+	return HTTPFound(media['url'])

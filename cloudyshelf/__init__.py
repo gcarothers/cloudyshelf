@@ -23,6 +23,7 @@ def main(global_config, **settings):
     config.add_route('signup', '/signup')
     config.add_route('callback', '/callback')
     config.add_route('shelf', '/shelf')
+    config.add_route('shelf_download', '/shelf/{book}/download')
     config.scan()
     return config.make_wsgi_app()
 
