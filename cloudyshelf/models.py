@@ -16,8 +16,45 @@ from zope.sqlalchemy import ZopeTransactionExtension
 DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
 Base = declarative_base()
 
-class User(Base):
-    __tablename__ = 'users'
+import ziggurat_foundations.models
+from ziggurat_foundations.models import BaseModel, UserMixin, GroupMixin
+from ziggurat_foundations.models import GroupPermissionMixin, UserGroupMixin
+from ziggurat_foundations.models import GroupResourcePermissionMixin, ResourceMixin
+from ziggurat_foundations.models import UserPermissionMixin, UserResourcePermissionMixin
+from ziggurat_foundations.models import ExternalIdentityMixin
+from ziggurat_foundations import ziggurat_model_init
+# this is needed for pylons 1.0 / akhet approach to db session
+ziggurat_foundations.models.DBSession = DBSession
+# optional for folks who pass request.db to model methods
 
-    id = Column(Integer, primary_key=True)
+# Base is sqlalchemy's Base = declarative_base() from your project
+class Group(GroupMixin, Base):
+    pass
+
+class GroupPermission(GroupPermissionMixin, Base):
+    pass
+
+class UserGroup(UserGroupMixin, Base):
+    pass
+
+class GroupResourcePermission(GroupResourcePermissionMixin, Base):
+    pass
+
+class Resource(ResourceMixin, Base):
+    pass
+
+class UserPermission(UserPermissionMixin, Base):
+    pass
+
+class UserResourcePermission(UserResourcePermissionMixin, Base):
+    pass
+
+class User(UserMixin, Base):
     dropbox_token = Column(Text)
+
+class ExternalIdentity(ExternalIdentityMixin, Base):
+    pass
+
+ziggurat_model_init(User, Group, UserGroup, GroupPermission, UserPermission,
+               UserResourcePermission, GroupResourcePermission, Resource,
+               ExternalIdentity, passwordmanager=None)
