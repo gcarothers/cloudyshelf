@@ -27,9 +27,9 @@ def signup(request):
 @view_config(route_name='signup', request_method='POST')
 def post_signup(request):
 	user = User()
-	user.user_name = session['email']
-	user.email = session['email']
-	user.set_password(session['password'])
+	user.user_name = request.params['email']
+	user.email = request.params['email']
+	user.set_password(request.params['password'])
 	user.status = 0
 	DBSession.add(user)
 	DBSession.flush()
@@ -39,7 +39,7 @@ def post_signup(request):
 	)
 
 	request_token = request.dropbox_session.obtain_request_token()
-	session['request_token'] = request_token.to_string()
+	request.session['request_token'] = request_token.to_string()
 	authorize_url = request.dropbox_session.build_authorize_url(
 		request_token, oauth_callback=request.route_url('callback', qualified=True))
 	return HTTPFound(authorize_url)
@@ -47,7 +47,9 @@ def post_signup(request):
 @view_config(route_name='callback', request_method='GET', permission='logged in')
 def callback(request):
 	user = request.user
-	request_token = oauth.OAuthToken.from_string(session['request_token'])
+	request_token = oauth.OAuthToken.from_string(request.session['request_token'])
+	del request.session['request_token']
+	assert request_token.key == request.params['oauth_token']
 	access_token = request.dropbox_session.obtain_access_token(request_token)
 	user.dropbox_token = access_token.to_string()
 	return HTTPFound(request.route_url('shelf'))
