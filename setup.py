@@ -15,6 +15,7 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'dropbox',
+    'ziggurat_foundations',
     ]
 
 setup(name='cloudyshelf',
