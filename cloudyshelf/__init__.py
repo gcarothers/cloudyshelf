@@ -1,4 +1,5 @@
 from pyramid.config import Configurator
+from pyramid.httpexceptions import HTTPForbidden
 from pyramid.session import UnencryptedCookieSessionFactoryConfig
 from pyramid.authentication import SessionAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -17,7 +18,7 @@ def main(global_config, **settings):
     DBSession.configure(bind=engine)
     Base.metadata.create_all(engine)
     session_factory = UnencryptedCookieSessionFactoryConfig(settings['pyramid.session_secret'])
-    authentication_policy = SessionAuthenticationPolicy(callback=session_callback, debug=True)
+    authentication_policy = SessionAuthenticationPolicy(callback=session_callback)
     authorizaton_policy = ACLAuthorizationPolicy()
     config = Configurator(settings=settings, session_factory=session_factory,
                           root_factory=SimpleContext)
@@ -32,9 +33,11 @@ def main(global_config, **settings):
     config.add_route('login', '/login')
     config.add_route('logout', '/logout')
     config.add_route('signup', '/signup')
+    config.add_route('allow_dropbox', '/allow_dropbox')
     config.add_route('callback', '/callback')
     config.add_route('shelf', '/shelf')
     config.add_route('shelf_download', '/shelf/{book}/download')
+    config.add_view('cloudyshelf.views.forbidden_view', context=HTTPForbidden)
     config.scan()
     config.scan('cloudyshelf.subscribers')
 

@@ -15,7 +15,7 @@ class SimpleContext(object):
         pass
 
     __acl__ = [
-        (Allow, 'group:dropbox', 'dropbox'),
+        (Allow, 'group:dropbox_allowed', 'dropbox allowed'),
         (Allow, Authenticated, 'logged in'),
     ]
 

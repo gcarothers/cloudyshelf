@@ -2,6 +2,7 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
 from pyramid.security import (
 	authenticated_userid,
+	effective_principals,
 	forget,
 	remember,
 )
@@ -37,7 +38,14 @@ def post_signup(request):
 	request.response.headerlist.extend(
 		remember(request, user.id),
 	)
+	return HTTPFound(request.route_url('shelf'))
 
+@view_config(route_name='allow_dropbox', renderer='allow_dropbox.mako', request_method='GET')
+def signup_dropbox(requset):
+	return {}
+
+@view_config(route_name='allow_dropbox', request_method='POST')
+def post_signup_dropbox(request):
 	request_token = request.dropbox_session.obtain_request_token()
 	request.session['request_token'] = request_token.to_string()
 	authorize_url = request.dropbox_session.build_authorize_url(
@@ -77,7 +85,7 @@ def logout(request):
 	)
 	return HTTPFound(request.route_url('login'))
 
-@view_config(route_name='shelf', renderer='shelf.mako', permission='dropbox')
+@view_config(route_name='shelf', renderer='shelf.mako', permission='dropbox allowed')
 def shelf(request):
 	user = request.user
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
@@ -86,7 +94,7 @@ def shelf(request):
 	metadata = client.metadata('/')
 	return {'user': user, 'files': metadata['contents']}
 
-@view_config(route_name='shelf_download', permission='dropbox')
+@view_config(route_name='shelf_download', permission='dropbox allowed')
 def shelf_download(request):
 	user = request.user
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
@@ -94,3 +102,9 @@ def shelf_download(request):
 	client = DropboxClient(request.dropbox_session)
 	media = client.media('/' + request.matchdict['book'])
 	return HTTPFound(media['url'])
+
+def forbidden_view(request):
+	if not authenticated_userid(request):
+		return HTTPFound(request.route_url('login'))
+	if authenticated_userid(request) and not 'group:dropbox_allowed' in effective_principals(request):
+		return HTTPFound(request.route_url('allow_dropbox'))
