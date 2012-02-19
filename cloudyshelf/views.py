@@ -17,6 +17,9 @@ def my_view(request):
 
 @view_config(route_name='signup', renderer='templates/signup.pt', request_method='GET')
 def signup(request):
+	session = request.session
+	if 'user_id' in session:
+		return HTTPFound(request.route_url('shelf'))
 	return {}
 
 @view_config(route_name='signup', request_method='POST')
@@ -51,7 +54,10 @@ def callback(request):
 
 @view_config(route_name='login', renderer='templates/login.pt', request_method='GET')
 def login(request):
-	pass
+	session = request.session
+	if 'user_id' in session:
+		return HTTPFound(request.route_url('shelf'))
+	return {}
 
 @view_config(route_name='login', request_method='POST')
 def post_login(request):
