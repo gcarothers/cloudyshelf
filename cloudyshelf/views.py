@@ -8,8 +8,6 @@ from .models import (
     User,
     )
 
-from . import BoxSession
-
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
 def my_view(request):
     single_user = DBSession.query(User).get(1)
@@ -27,9 +25,9 @@ def post_signup(request):
 	session = request.session
 	session['email'] = request.params['email']
 	session['password'] = request.params['password']
-	request_token = BoxSession.obtain_request_token()
+	request_token = request.dropbox_session.obtain_request_token()
 	session['request_token'] = request_token.to_string()
-	authorize_url = BoxSession.build_authorize_url(
+	authorize_url = request.dropbox_session.build_authorize_url(
 		request_token, oauth_callback=request.route_url('callback', qualified=True))
 	return HTTPFound(authorize_url)
 
@@ -37,7 +35,7 @@ def post_signup(request):
 def callback(request):
 	session = request.session
 	request_token = oauth.OAuthToken.from_string(session['request_token'])
-	access_token = BoxSession.obtain_access_token(request_token)
+	access_token = request.dropbox_session.obtain_access_token(request_token)
 	user = User()
 	user.user_name = session['email']
 	user.email = session['email']
@@ -55,6 +53,7 @@ def callback(request):
 @view_config(route_name='login', renderer='templates/login.pt', request_method='GET')
 def login(request):
 	session = request.session
+	session['user_id'] = 1
 	if 'user_id' in session:
 		return HTTPFound(request.route_url('shelf'))
 	return {}
@@ -68,8 +67,8 @@ def shelf(request):
 	session = request.session
 	user = DBSession.query(User).get(session['user_id'])
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
-	BoxSession.set_token(access_token.key, access_token.secret)
-	client = DropboxClient(BoxSession)
+	request.dropbox_session.set_token(access_token.key, access_token.secret)
+	client = DropboxClient(request.dropbox_session)
 	metadata = client.metadata('/')
 	return {'user': user, 'files': metadata['contents']}
 
@@ -78,7 +77,7 @@ def shelf_download(request):
 	session = request.session
 	user = DBSession.query(User).get(session['user_id'])
 	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
-	BoxSession.set_token(access_token.key, access_token.secret)
-	client = DropboxClient(BoxSession)
+	request.dropbox_session.set_token(access_token.key, access_token.secret)
+	client = DropboxClient(request.dropbox_session)
 	media = client.media('/' + request.matchdict['book'])
 	return HTTPFound(media['url'])
