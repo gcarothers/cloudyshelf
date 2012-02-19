@@ -13,7 +13,7 @@ def my_view(request):
     single_user = DBSession.query(User).get(1)
     return {'single_user':single_user, 'project':'cloudyshelf'}
 
-@view_config(route_name='signup', renderer='templates/signup.pt', request_method='GET')
+@view_config(route_name='signup', renderer='signup.mako', request_method='GET')
 def signup(request):
 	session = request.session
 	if 'user_id' in session:
@@ -50,7 +50,7 @@ def callback(request):
 	session['user_id'] = user.id
 	return HTTPFound(request.route_url('shelf'))
 
-@view_config(route_name='login', renderer='templates/login.pt', request_method='GET')
+@view_config(route_name='login', renderer='login.mako', request_method='GET')
 def login(request):
 	session = request.session
 	session['user_id'] = 1
@@ -60,7 +60,13 @@ def login(request):
 
 @view_config(route_name='login', request_method='POST')
 def post_login(request):
-	pass
+	session = request.session
+	user = User.by_user_name(user_name = request.params['email'])
+	if user.check_password(request.params['password']):
+		session['user_id'] = user.id
+		return HTTPFound(request.route_url('shelf'))
+	else:
+		return HTTPFound(request.route_url('login'))
 
 @view_config(route_name='shelf', renderer='shelf.mako')
 def shelf(request):
