@@ -1,6 +1,7 @@
 from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
 from oauth import oauth
+from dropbox.client import DropboxClient
 
 from .models import (
     DBSession,
@@ -56,6 +57,12 @@ def login(request):
 def post_login(request):
 	pass
 
-@view_config(route_name='shelf', renderer='templates/shelf.pt')
+@view_config(route_name='shelf', renderer='shelf.mako')
 def shelf(request):
-	pass
+	session = request.session
+	user = DBSession.query(User).get(session['user_id'])
+	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
+	BoxSession.set_token(access_token.key, access_token.secret)
+	client = DropboxClient(BoxSession)
+	metadata = client.metadata('/')
+	return {'user': user, 'files': metadata['contents']}
