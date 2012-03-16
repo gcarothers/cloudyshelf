@@ -108,3 +108,7 @@ def forbidden_view(request):
 		return HTTPFound(request.route_url('login'))
 	if authenticated_userid(request) and not 'group:dropbox_allowed' in effective_principals(request):
 		return HTTPFound(request.route_url('allow_dropbox'))
+
+@view_config(route_name='scan_for_new_books', permission='dropbox allowed')
+def scan_for_new_books(request):
+	user = request.user

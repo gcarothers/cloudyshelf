@@ -1,20 +1,13 @@
+__all__ = ['Group', 'GroupPermission', 'UserGroup', 'GroupResourcePermission',
+           'Resource', 'UserPermission', 'UserResourcePermission', 'User',
+           'ExternalIdentity',]
+
+from .base import *
+
 from sqlalchemy import (
     Column,
-    Integer,
     Text,
     )
-
-from sqlalchemy.ext.declarative import declarative_base
-
-from sqlalchemy.orm import (
-    scoped_session,
-    sessionmaker,
-    )
-
-from zope.sqlalchemy import ZopeTransactionExtension
-
-DBSession = scoped_session(sessionmaker(extension=ZopeTransactionExtension()))
-Base = declarative_base()
 
 import ziggurat_foundations.models
 from ziggurat_foundations.models import (
