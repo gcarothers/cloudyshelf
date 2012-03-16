@@ -3,10 +3,15 @@ __all__ = ['Group', 'GroupPermission', 'UserGroup', 'GroupResourcePermission',
            'ExternalIdentity',]
 
 from .base import *
+from .files import *
 
 from sqlalchemy import (
     Column,
     Text,
+    )
+
+from sqlalchemy.orm import (
+    relation,
     )
 
 import ziggurat_foundations.models
@@ -44,6 +49,8 @@ class UserResourcePermission(UserResourcePermissionMixin, Base):
 
 class User(UserMixin, Base):
     dropbox_token = Column(Text)
+
+    scanned_files = relation(ScannedFile, backref='user')
 
 class ExternalIdentity(ExternalIdentityMixin, Base):
     pass
