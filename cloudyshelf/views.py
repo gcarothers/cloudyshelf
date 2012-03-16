@@ -127,7 +127,7 @@ def scan_for_new_books(request):
 			else:
 				dropbox_file = DropboxFile()
 				dropbox_file.path = f['path']
-				dropbox_file.rev = f['rev']
+				dropbox_file.revision = f['rev']
 				user.files.set(dropbox_file)
 
 	# Then:
@@ -136,3 +136,6 @@ def scan_for_new_books(request):
 	# 3) Create or update Book record as needed
 	# 4) MOVE file into standardized location, update path & rev data
 	# 5) Associate DropboxFile record with Book record, or set non_book
+
+	return HTTPFound(request.route_url('shelf'))
+
