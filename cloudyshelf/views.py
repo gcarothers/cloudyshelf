@@ -1,3 +1,5 @@
+import os.path
+
 from pyramid.httpexceptions import HTTPFound
 from pyramid.view import view_config
 from pyramid.security import (
@@ -12,6 +14,7 @@ from dropbox.client import DropboxClient
 from .models import (
     DBSession,
     User,
+    ScannedFile,
     )
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
@@ -88,27 +91,45 @@ def logout(request):
 @view_config(route_name='shelf', renderer='shelf.mako', permission='dropbox allowed')
 def shelf(request):
 	user = request.user
-	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
-	request.dropbox_session.set_token(access_token.key, access_token.secret)
-	client = DropboxClient(request.dropbox_session)
-	metadata = client.metadata('/')
+	metadata = request.client.metadata('/')
 	return {'user': user, 'files': metadata['contents']}
 
 @view_config(route_name='shelf_download', permission='dropbox allowed')
 def shelf_download(request):
 	user = request.user
-	access_token = oauth.OAuthToken.from_string(user.dropbox_token)
-	request.dropbox_session.set_token(access_token.key, access_token.secret)
-	client = DropboxClient(request.dropbox_session)
-	media = client.media('/' + request.matchdict['book'])
+	media = request.client.media('/' + request.matchdict['book'])
 	return HTTPFound(media['url'])
 
 def forbidden_view(request):
 	if not authenticated_userid(request):
 		return HTTPFound(request.route_url('login'))
-	if authenticated_userid(request) and not 'group:dropbox_allowed' in effective_principals(request):
+	if authenticated_userid(request) and not 'group:dropbox' in effective_principals(request):
 		return HTTPFound(request.route_url('allow_dropbox'))
 
 @view_config(route_name='scan_for_new_books', permission='dropbox allowed')
 def scan_for_new_books(request):
 	user = request.user
+	# Presuming that dropbox directory structure does not loop back on itself...
+	directory_queue = ['/']
+	skip = ('/unsorted',)
+	while directory_queue:
+		current_folder = directory_queue.pop()
+		metadata = request.client.metadata(current_folder)
+		for f in metadata['contents']:
+			if f['path'] in skip:
+				continue
+			if f['is_dir']:
+				directory_queue.append(f['path'])
+				continue
+			if f['path'] in user.scanned_files:
+				scanned_file = user.scanned_files[f['path']]
+			if f['path'] not in user.scanned_files or scanned_file.revision != f['rev']:
+				request.client.file_copy(
+					f['path'], os.path.join('/unsorted', f['path'][1:]))
+				if f['path'] in user.scanned_files:
+					scanned_file.revision = f['rev']
+				else:
+					scanned_file = ScannedFile()
+					scanned_file.path = f['path']
+					scanned_file.rev = f['rev']
+					user.scanned_files.set(scanned_file)

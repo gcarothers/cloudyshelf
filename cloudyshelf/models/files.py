@@ -16,6 +16,6 @@ class ScannedFile(Base):
 
 	__tablename__ = 'scanned_file'
 
-	filename = Column(Text, primary_key=True)
-	revision = Column(Text, primary_key=True)
+	path = Column(Text, primary_key=True)
 	user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+	revision = Column(Text, nullable=False)

@@ -14,6 +14,10 @@ from sqlalchemy.orm import (
     relation,
     )
 
+from sqlalchemy.orm.collections import (
+    attribute_mapped_collection,
+    )
+
 import ziggurat_foundations.models
 from ziggurat_foundations.models import (
     BaseModel, UserMixin, GroupMixin, GroupPermissionMixin, UserGroupMixin,
@@ -50,7 +54,8 @@ class UserResourcePermission(UserResourcePermissionMixin, Base):
 class User(UserMixin, Base):
     dropbox_token = Column(Text)
 
-    scanned_files = relation(ScannedFile, backref='user')
+    scanned_files = relation(ScannedFile, backref='user',
+                             collection_class=attribute_mapped_collection('path'))
 
 class ExternalIdentity(ExternalIdentityMixin, Base):
     pass

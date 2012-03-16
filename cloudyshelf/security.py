@@ -10,12 +10,15 @@ from .models import (
 	User
 )
 
+from oauth import oauth
+from dropbox.client import DropboxClient
+
 class SimpleContext(object):
     def __init__(self, request):
         pass
 
     __acl__ = [
-        (Allow, 'group:dropbox_allowed', 'dropbox allowed'),
+        (Allow, 'group:dropbox', 'dropbox allowed'),
         (Allow, Authenticated, 'logged in'),
     ]
 
@@ -25,6 +28,10 @@ def session_callback(userid, request):
     	return None
     request.user = user
     principals = [userid,]
+
     if user.dropbox_token:
     	principals.append('group:dropbox')
+        access_token = oauth.OAuthToken.from_string(user.dropbox_token)
+        request.dropbox_session.set_token(access_token.key, access_token.secret)
+        request.client = DropboxClient(request.dropbox_session)
     return principals

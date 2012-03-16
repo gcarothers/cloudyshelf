@@ -11,4 +11,5 @@ def make_dropbox_session(event):
 		app_key = settings['dropbox.app_key']
 		app_secret = settings['dropbox.app_secret']
 		access_type = 'app_folder'
-		event.request.dropbox_session = session.DropboxSession(app_key, app_secret, access_type)
+		event.request.dropbox_session = session.DropboxSession(
+			app_key, app_secret, access_type)

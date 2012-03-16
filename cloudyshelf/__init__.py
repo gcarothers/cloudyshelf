@@ -37,6 +37,7 @@ def main(global_config, **settings):
     config.add_route('oauth_callback', '/dropbox/callback')
     config.add_route('shelf', '/shelf')
     config.add_route('shelf_download', '/shelf/{book}/download')
+    config.add_route('scan_for_new_books', '/scan')
     config.add_view('cloudyshelf.views.forbidden_view', context=HTTPForbidden)
     config.scan()
     config.scan('cloudyshelf.subscribers')
