@@ -54,8 +54,8 @@ class UserResourcePermission(UserResourcePermissionMixin, Base):
 class User(UserMixin, Base):
     dropbox_token = Column(Text)
 
-    scanned_files = relation(ScannedFile, backref='user',
-                             collection_class=attribute_mapped_collection('path'))
+    files = relation(DropboxFile, backref='user',
+                     collection_class=attribute_mapped_collection('path'))
 
 class ExternalIdentity(ExternalIdentityMixin, Base):
     pass

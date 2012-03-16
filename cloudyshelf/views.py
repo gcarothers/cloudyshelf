@@ -14,7 +14,7 @@ from dropbox.client import DropboxClient
 from .models import (
     DBSession,
     User,
-    ScannedFile,
+    DropboxFile,
     )
 
 @view_config(route_name='home', renderer='templates/mytemplate.pt')
@@ -111,25 +111,28 @@ def scan_for_new_books(request):
 	user = request.user
 	# Presuming that dropbox directory structure does not loop back on itself...
 	directory_queue = ['/']
-	skip = ('/unsorted',)
 	while directory_queue:
 		current_folder = directory_queue.pop()
 		metadata = request.client.metadata(current_folder)
 		for f in metadata['contents']:
-			if f['path'] in skip:
-				continue
 			if f['is_dir']:
 				directory_queue.append(f['path'])
 				continue
-			if f['path'] in user.scanned_files:
-				scanned_file = user.scanned_files[f['path']]
-			if f['path'] not in user.scanned_files or scanned_file.revision != f['rev']:
-				request.client.file_copy(
-					f['path'], os.path.join('/unsorted', f['path'][1:]))
-				if f['path'] in user.scanned_files:
-					scanned_file.revision = f['rev']
-				else:
-					scanned_file = ScannedFile()
-					scanned_file.path = f['path']
-					scanned_file.rev = f['rev']
-					user.scanned_files.set(scanned_file)
+			if f['path'] in user.files:
+				dropbox_file = user.files[f['path']]
+				if dropbox_file.revision != f['rev']:
+					dropbox_file.book_id = None # Can't know if it's the same book...
+					dropbox_file.non_book = False # Might be a book now?
+					dropbox_file.revision = f['rev']
+			else:
+				dropbox_file = DropboxFile()
+				dropbox_file.path = f['path']
+				dropbox_file.rev = f['rev']
+				user.files.set(dropbox_file)
+
+	# Then:
+	# 1) run through dropbox_files with non_book = False and book_id = None
+	# 2) Pull down, determine type, extract metadata
+	# 3) Create or update Book record as needed
+	# 4) MOVE file into standardized location, update path & rev data
+	# 5) Associate DropboxFile record with Book record, or set non_book
