@@ -16,6 +16,7 @@ requires = [
     'waitress',
     'dropbox',
     'ziggurat_foundations',
+    'oauth2',
     ]
 
 setup(name='cloudyshelf',

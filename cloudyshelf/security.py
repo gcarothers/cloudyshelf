@@ -6,11 +6,11 @@ from pyramid.security import (
 )
 
 from .models import (
-	DBSession,
-	User
+    DBSession,
+    User
 )
 
-from oauth import oauth
+from oauth2 import oauth
 from dropbox.client import DropboxClient
 
 class SimpleContext(object):
@@ -25,12 +25,12 @@ class SimpleContext(object):
 def session_callback(userid, request):
     user = DBSession.query(User).get(userid)
     if not user:
-    	return None
+        return None
     request.user = user
     principals = [userid,]
 
     if user.dropbox_token:
-    	principals.append('group:dropbox')
+        principals.append('group:dropbox')
         access_token = oauth.OAuthToken.from_string(user.dropbox_token)
         request.dropbox_session.set_token(access_token.key, access_token.secret)
         request.client = DropboxClient(request.dropbox_session)
