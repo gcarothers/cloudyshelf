@@ -17,7 +17,7 @@ requires = [
     'dropbox',
     'ziggurat_foundations',
     'oauth2',
-    'pysqlite2',
+    'pysqlite',
     ]
 
 setup(name='cloudyshelf',
