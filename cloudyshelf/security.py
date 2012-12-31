@@ -10,7 +10,7 @@ from .models import (
     User
 )
 
-from oauth2 import oauth
+import oauth2 as oauth
 from dropbox.client import DropboxClient
 
 class SimpleContext(object):

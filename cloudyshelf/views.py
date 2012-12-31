@@ -8,7 +8,8 @@ from pyramid.security import (
 	forget,
 	remember,
 )
-from oauth import oauth
+
+import oauth2 as oauth
 from dropbox.client import DropboxClient
 
 from .models import (
